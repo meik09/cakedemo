@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 /**
  * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
  * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
@@ -17,11 +19,9 @@ use DebugKit\DebugPanel;
 
 /**
  * Log Panel - Reads log entries made this request.
- *
  */
 class LogPanel extends DebugPanel
 {
-
     /**
      * Initialize hook - sets up the log listener.
      *
@@ -56,6 +56,7 @@ class LogPanel extends DebugPanel
      */
     public function summary()
     {
+        /** @var \DebugKit\Log\Engine\DebugKitLog|null $logger */
         $logger = Log::engine('debug_kit_log_panel');
         if (!$logger) {
             return '0';

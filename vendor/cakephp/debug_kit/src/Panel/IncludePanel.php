@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 /**
  * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
  * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
@@ -12,19 +14,16 @@
  */
 namespace DebugKit\Panel;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Utility\Hash;
-use Composer\Json\JsonFile;
 use DebugKit\DebugInclude;
 use DebugKit\DebugPanel;
 
 /**
  * Provides a list of included files for the current request
- *
  */
 class IncludePanel extends DebugPanel
 {
-
     /**
      * instance of DebugInclude
      *
@@ -53,7 +52,11 @@ class IncludePanel extends DebugPanel
             $pluginName = $this->_debug->getPluginName($file);
 
             if ($pluginName) {
-                $return['plugins'][$pluginName][$this->_debug->getFileType($file)][] = $this->_debug->niceFileName($file, 'plugin', $pluginName);
+                $return['plugins'][$pluginName][$this->_debug->getFileType($file)][] = $this->_debug->niceFileName(
+                    $file,
+                    'plugin',
+                    $pluginName
+                );
             } elseif ($this->_debug->isAppFile($file)) {
                 $return['app'][$this->_debug->getFileType($file)][] = $this->_debug->niceFileName($file, 'app');
             } elseif ($this->_debug->isCakeFile($file)) {
@@ -100,16 +103,16 @@ class IncludePanel extends DebugPanel
             return !empty($v);
         }, ARRAY_FILTER_USE_BOTH);
 
-        return count(Hash::flatten($data));
+        return (string)count(Hash::flatten($data));
     }
 
     /**
      * Shutdown callback
      *
-     * @param \Cake\Event\Event $event Event
+     * @param \Cake\Event\EventInterface $event Event
      * @return void
      */
-    public function shutdown(Event $event)
+    public function shutdown(EventInterface $event)
     {
         $this->_data = $this->_prepare();
     }

@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 /**
  * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
  * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
@@ -24,11 +26,10 @@ use ReflectionClass;
  */
 class MailPanel extends DebugPanel
 {
-
     /**
      * The list of emails produced during the request
      *
-     * @var ArrayObject
+     * @var \ArrayObject|null
      */
     protected $emailLog;
 
@@ -42,25 +43,29 @@ class MailPanel extends DebugPanel
         $reflection = new ReflectionClass(TransportFactory::class);
         $property = $reflection->getProperty('_config');
         $property->setAccessible(true);
+        /** @var array<\Cake\Mailer\AbstractTransport|array> $configs */
         $configs = $property->getValue();
 
         $log = $this->emailLog = new ArrayObject();
 
-        foreach ($configs as $name => &$transport) {
+        foreach ($configs as $name => $transport) {
             if (is_object($transport)) {
-                $configs[$name] = new DebugKitTransport(['debugKitLog' => $log], $transport);
+                if (!$transport instanceof DebugKitTransport) {
+                    $configs[$name] = new DebugKitTransport(['debugKitLog' => $log], $transport);
+                }
                 continue;
             }
 
             $className = App::className($transport['className'], 'Mailer/Transport', 'Transport');
-
-            if (!$className) {
+            if (!$className || $className === DebugKitTransport::class) {
                 continue;
             }
 
             $transport['originalClassName'] = $transport['className'];
             $transport['className'] = 'DebugKit.DebugKit';
             $transport['debugKitLog'] = $log;
+
+            $configs[$name] = $transport;
         }
         $property->setValue($configs);
     }

@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 /**
  * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
  * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
@@ -12,7 +14,7 @@
  */
 namespace DebugKit\Controller;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\Exception\NotFoundException;
 
 /**
@@ -23,22 +25,25 @@ use Cake\Http\Exception\NotFoundException;
 class PanelsController extends DebugKitController
 {
     /**
-     * components
+     * Initialize controller
      *
-     * @var array
+     * @return void
      */
-    public $components = ['RequestHandler', 'Cookie'];
+    public function initialize(): void
+    {
+        $this->loadComponent('RequestHandler');
+    }
 
     /**
      * Before render handler.
      *
-     * @param \Cake\Event\Event $event The event.
+     * @param \Cake\Event\EventInterface $event The event.
      * @return void
      */
-    public function beforeRender(Event $event)
+    public function beforeRender(EventInterface $event)
     {
         $this->viewBuilder()
-            ->setHelpers([
+            ->addHelpers([
                 'Form', 'Html', 'Number', 'Url', 'DebugKit.Toolbar',
                 'DebugKit.Credentials', 'DebugKit.SimpleGraph',
             ])
@@ -64,9 +69,9 @@ class PanelsController extends DebugKitController
             throw new NotFoundException();
         }
         $this->set([
-            '_serialize' => ['panels'],
             'panels' => $panels,
         ]);
+        $this->viewBuilder()->setOption('serialize', ['panels']);
     }
 
     /**
@@ -77,13 +82,41 @@ class PanelsController extends DebugKitController
      */
     public function view($id = null)
     {
-        $this->Cookie->configKey('debugKit_sort', 'encryption', false);
-        $this->set('sort', $this->Cookie->read('debugKit_sort'));
-        $panel = $this->Panels->get($id);
+        $this->set('sort', $this->request->getCookie('debugKit_sort'));
+        $panel = $this->Panels->get($id, ['contain' => ['Requests']]);
 
         $this->set('panel', $panel);
         // @codingStandardsIgnoreStart
         $this->set(@unserialize($panel->content));
         // @codingStandardsIgnoreEnd
+    }
+
+    /**
+     * Get Latest request history panel
+     *
+     * @return \Cake\Http\Response|null
+     */
+    public function latestHistory()
+    {
+        /** @var array{id:string}|null $request */
+        $request = $this->Panels->Requests->find('recent')
+            ->select(['id'])
+            ->disableHydration()
+            ->first();
+        if (!$request) {
+            throw new NotFoundException('No requests found');
+        }
+        /** @var array{id:string}|null $historyPanel */
+        $historyPanel = $this->Panels->find('byRequest', ['requestId' => $request['id']])
+            ->where(['title' => 'History'])
+            ->select(['id'])
+            ->first();
+        if (!$historyPanel) {
+            throw new NotFoundException('History Panel from latest request not found');
+        }
+
+        return $this->redirect([
+            'action' => 'view', $historyPanel['id'],
+        ]);
     }
 }

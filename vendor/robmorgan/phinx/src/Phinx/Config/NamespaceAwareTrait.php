@@ -20,29 +20,28 @@ trait NamespaceAwareTrait
      *
      * @return string[]
      */
-    abstract public function getMigrationPaths();
+    abstract public function getMigrationPaths(): array;
 
     /**
      * Gets the paths to search for seed files.
      *
      * @return string[]
      */
-    abstract public function getSeedPaths();
+    abstract public function getSeedPaths(): array;
 
     /**
      * Search $needle in $haystack and return key associate with him.
      *
-     * @param string $needle
-     * @param array $haystack
-     *
+     * @param string $needle Needle
+     * @param string[] $haystack Haystack
      * @return string|null
      */
-    protected function searchNamespace($needle, $haystack)
+    protected function searchNamespace(string $needle, array $haystack): ?string
     {
         $needle = realpath($needle);
         $haystack = array_map('realpath', $haystack);
 
-        $key = array_search($needle, $haystack);
+        $key = array_search($needle, $haystack, true);
 
         return is_string($key) ? trim($key, '\\') : null;
     }
@@ -50,11 +49,10 @@ trait NamespaceAwareTrait
     /**
      * Get Migration Namespace associated with path.
      *
-     * @param string $path
-     *
+     * @param string $path Path
      * @return string|null
      */
-    public function getMigrationNamespaceByPath($path)
+    public function getMigrationNamespaceByPath(string $path): ?string
     {
         $paths = $this->getMigrationPaths();
 
@@ -64,11 +62,10 @@ trait NamespaceAwareTrait
     /**
      * Get Seed Namespace associated with path.
      *
-     * @param string $path
-     *
+     * @param string $path Path
      * @return string|null
      */
-    public function getSeedNamespaceByPath($path)
+    public function getSeedNamespaceByPath(string $path): ?string
     {
         $paths = $this->getSeedPaths();
 

@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 /**
  * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
  * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
@@ -47,7 +49,7 @@ use Cake\Http\ServerRequest;
  * valid credentials are not provided, required authentication headers will be sent
  * by this authentication provider which triggers the login dialog in the browser/client.
  *
- * @see https://book.cakephp.org/3/en/controllers/components/authentication.html
+ * @see https://book.cakephp.org/4/en/controllers/components/authentication.html
  */
 class BasicAuthenticate extends BaseAuthenticate
 {
@@ -57,7 +59,7 @@ class BasicAuthenticate extends BaseAuthenticate
      *
      * @param \Cake\Http\ServerRequest $request The request to authenticate with.
      * @param \Cake\Http\Response $response The response to add headers to.
-     * @return array|false Either false on failure, or an array of user data on success.
+     * @return array<string, mixed>|false Either false on failure, or an array of user data on success.
      */
     public function authenticate(ServerRequest $request, Response $response)
     {
@@ -68,7 +70,7 @@ class BasicAuthenticate extends BaseAuthenticate
      * Get a user based on information in the request. Used by cookie-less auth for stateless clients.
      *
      * @param \Cake\Http\ServerRequest $request Request object.
-     * @return array|false Either false or an array of user information
+     * @return array<string, mixed>|false Either false or an array of user information
      */
     public function getUser(ServerRequest $request)
     {
@@ -87,23 +89,24 @@ class BasicAuthenticate extends BaseAuthenticate
      *
      * @param \Cake\Http\ServerRequest $request A request object.
      * @param \Cake\Http\Response $response A response object.
-     * @return void
+     * @return \Cake\Http\Response|null|void
      * @throws \Cake\Http\Exception\UnauthorizedException
      */
     public function unauthenticated(ServerRequest $request, Response $response)
     {
-        $Exception = new UnauthorizedException();
-        $Exception->responseHeader($this->loginHeaders($request));
-        throw $Exception;
+        $unauthorizedException = new UnauthorizedException();
+        $unauthorizedException->setHeaders($this->loginHeaders($request));
+
+        throw $unauthorizedException;
     }
 
     /**
      * Generate the login headers
      *
      * @param \Cake\Http\ServerRequest $request Request object.
-     * @return string[] Headers for logging in.
+     * @return array<string, string> Headers for logging in.
      */
-    public function loginHeaders(ServerRequest $request)
+    public function loginHeaders(ServerRequest $request): array
     {
         $realm = $this->getConfig('realm') ?: $request->getEnv('SERVER_NAME');
 

@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 /**
  * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
  * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
@@ -14,7 +16,6 @@
  */
 namespace Cake\I18n;
 
-use Aura\Intl\Package;
 use Cake\Core\App;
 use Cake\Core\Plugin;
 use Cake\Utility\Inflector;
@@ -62,21 +63,21 @@ class MessagesFileLoader
      *
      * ### Examples:
      *
-     * Load and parse src/Locale/fr/validation.po
+     * Load and parse resources/locales/fr/validation.po
      *
      * ```
      * $loader = new MessagesFileLoader('validation', 'fr_FR', 'po');
      * $package = $loader();
      * ```
      *
-     * Load and parse src/Locale/fr_FR/validation.mo
+     * Load and parse resources/locales/fr_FR/validation.mo
      *
      * ```
      * $loader = new MessagesFileLoader('validation', 'fr_FR', 'mo');
      * $package = $loader();
      * ```
      *
-     * Load the plugins/MyPlugin/src/Locale/fr/my_plugin.po file:
+     * Load the plugins/MyPlugin/resources/locales/fr/my_plugin.po file:
      *
      * ```
      * $loader = new MessagesFileLoader('my_plugin', 'fr_FR', 'mo');
@@ -89,7 +90,7 @@ class MessagesFileLoader
      * @param string $extension The file extension to use. This will also be mapped
      * to a messages parser class.
      */
-    public function __construct($name, $locale, $extension = 'po')
+    public function __construct(string $name, string $locale, string $extension = 'po')
     {
         $this->_name = $name;
         $this->_locale = $locale;
@@ -100,7 +101,7 @@ class MessagesFileLoader
      * Loads the translation file and parses it. Returns an instance of a translations
      * package containing the messages loaded from the file.
      *
-     * @return \Aura\Intl\Package|false
+     * @return \Cake\I18n\Package|false
      * @throws \RuntimeException if no file parser class could be found for the specified
      * file extension.
      */
@@ -145,9 +146,9 @@ class MessagesFileLoader
      * Returns the folders where the file should be looked for according to the locale
      * and package name.
      *
-     * @return array The list of folders where the translation file should be looked for
+     * @return array<string> The list of folders where the translation file should be looked for
      */
-    public function translationsFolders()
+    public function translationsFolders(): array
     {
         $locale = Locale::parseLocale($this->_locale) + ['region' => null];
 
@@ -158,9 +159,9 @@ class MessagesFileLoader
 
         $searchPaths = [];
 
-        $localePaths = App::path('Locale');
+        $localePaths = App::path('locales');
         if (empty($localePaths) && defined('APP')) {
-            $localePaths[] = APP . 'Locale' . DIRECTORY_SEPARATOR;
+            $localePaths[] = ROOT . 'resources' . DIRECTORY_SEPARATOR . 'locales' . DIRECTORY_SEPARATOR;
         }
         foreach ($localePaths as $path) {
             foreach ($folders as $folder) {
@@ -171,7 +172,7 @@ class MessagesFileLoader
         // If space is not added after slash, the character after it remains lowercased
         $pluginName = Inflector::camelize(str_replace('/', '/ ', $this->_name));
         if (Plugin::isLoaded($pluginName)) {
-            $basePath = Plugin::classPath($pluginName) . 'Locale' . DIRECTORY_SEPARATOR;
+            $basePath = App::path('locales', $pluginName)[0];
             foreach ($folders as $folder) {
                 $searchPaths[] = $basePath . $folder . DIRECTORY_SEPARATOR;
             }

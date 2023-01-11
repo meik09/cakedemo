@@ -9,9 +9,11 @@ namespace Phinx\Console\Command;
 
 use Exception;
 use InvalidArgumentException;
+use Phinx\Config\Config;
 use Phinx\Config\NamespaceAwareInterface;
 use Phinx\Util\Util;
 use RuntimeException;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -19,29 +21,30 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\ChoiceQuestion;
 use Symfony\Component\Console\Question\ConfirmationQuestion;
 
+#[AsCommand(name: 'create')]
 class Create extends AbstractCommand
 {
     /**
-     * @var string
+     * @var string|null
      */
     protected static $defaultName = 'create';
 
     /**
      * The name of the interface that any external template creation class is required to implement.
      */
-    const CREATION_INTERFACE = 'Phinx\Migration\CreationInterface';
+    public const CREATION_INTERFACE = 'Phinx\Migration\CreationInterface';
 
     /**
      * {@inheritDoc}
      *
      * @return void
      */
-    protected function configure()
+    protected function configure(): void
     {
         parent::configure();
 
         $this->setDescription('Create a new migration')
-            ->addArgument('name', InputArgument::REQUIRED, 'What is the name of the migration (in CamelCase)?')
+            ->addArgument('name', InputArgument::OPTIONAL, 'Class name of the migration (in CamelCase)')
             ->setHelp(sprintf(
                 '%sCreates a new database migration%s',
                 PHP_EOL,
@@ -57,6 +60,8 @@ class Create extends AbstractCommand
 
         // Allow the migration path to be chosen non-interactively.
         $this->addOption('path', null, InputOption::VALUE_REQUIRED, 'Specify the path in which to create this migration');
+
+        $this->addOption('style', null, InputOption::VALUE_REQUIRED, 'Specify the style of migration to create');
     }
 
     /**
@@ -65,7 +70,7 @@ class Create extends AbstractCommand
      *
      * @return \Symfony\Component\Console\Question\ConfirmationQuestion
      */
-    protected function getCreateMigrationDirectoryQuestion()
+    protected function getCreateMigrationDirectoryQuestion(): ConfirmationQuestion
     {
         return new ConfirmationQuestion('Create migrations directory? [y]/n ', true);
     }
@@ -73,11 +78,10 @@ class Create extends AbstractCommand
     /**
      * Get the question that allows the user to select which migration path to use.
      *
-     * @param string[] $paths
-     *
+     * @param string[] $paths Paths
      * @return \Symfony\Component\Console\Question\ChoiceQuestion
      */
-    protected function getSelectMigrationPathQuestion(array $paths)
+    protected function getSelectMigrationPathQuestion(array $paths): ChoiceQuestion
     {
         return new ChoiceQuestion('Which migrations path would you like to use?', $paths, 0);
     }
@@ -85,14 +89,12 @@ class Create extends AbstractCommand
     /**
      * Returns the migration path to create the migration in.
      *
-     * @param \Symfony\Component\Console\Input\InputInterface $input
-     * @param \Symfony\Component\Console\Output\OutputInterface $output
-     *
+     * @param \Symfony\Component\Console\Input\InputInterface $input Input
+     * @param \Symfony\Component\Console\Output\OutputInterface $output Output
      * @throws \Exception
-     *
-     * @return mixed
+     * @return string
      */
-    protected function getMigrationPath(InputInterface $input, OutputInterface $output)
+    protected function getMigrationPath(InputInterface $input, OutputInterface $output): string
     {
         // First, try the non-interactive option:
         $path = $input->getOption('path');
@@ -123,7 +125,7 @@ class Create extends AbstractCommand
             return array_shift($paths);
         }
 
-        // Ask the user which of their defined paths they'd like to use:
+        /** @var \Symfony\Component\Console\Helper\QuestionHelper $helper */
         $helper = $this->getHelper('question');
         $question = $this->getSelectMigrationPathQuestion($paths);
 
@@ -133,15 +135,13 @@ class Create extends AbstractCommand
     /**
      * Create the new migration.
      *
-     * @param \Symfony\Component\Console\Input\InputInterface $input
-     * @param \Symfony\Component\Console\Output\OutputInterface $output
-     *
+     * @param \Symfony\Component\Console\Input\InputInterface $input Input
+     * @param \Symfony\Component\Console\Output\OutputInterface $output Output
      * @throws \RuntimeException
      * @throws \InvalidArgumentException
-     *
      * @return int 0 on success
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->bootstrap($input, $output);
 
@@ -149,6 +149,7 @@ class Create extends AbstractCommand
         $path = $this->getMigrationPath($input, $output);
 
         if (!file_exists($path)) {
+            /** @var \Symfony\Component\Console\Helper\QuestionHelper $helper */
             $helper = $this->getHelper('question');
             $question = $this->getCreateMigrationDirectoryQuestion();
 
@@ -164,24 +165,30 @@ class Create extends AbstractCommand
 
         $path = realpath($path);
         $className = $input->getArgument('name');
+        if ($className === null) {
+            $currentTimestamp = Util::getCurrentTimestamp();
+            $className = 'V' . $currentTimestamp;
+            $fileName = $currentTimestamp . '.php';
+        } else {
+            if (!Util::isValidPhinxClassName($className)) {
+                throw new InvalidArgumentException(sprintf(
+                    'The migration class name "%s" is invalid. Please use CamelCase format.',
+                    $className
+                ));
+            }
 
-        if (!Util::isValidPhinxClassName($className)) {
-            throw new InvalidArgumentException(sprintf(
-                'The migration class name "%s" is invalid. Please use CamelCase format.',
-                $className
-            ));
+            // Compute the file path
+            $fileName = Util::mapClassNameToFileName($className);
         }
 
         if (!Util::isUniqueMigrationClassName($className, $path)) {
             throw new InvalidArgumentException(sprintf(
                 'The migration class name "%s%s" already exists',
-                $namespace ? ($namespace . '\\') : '',
+                $namespace ? $namespace . '\\' : '',
                 $className
             ));
         }
 
-        // Compute the file path
-        $fileName = Util::mapClassNameToFileName($className);
         $filePath = $path . DIRECTORY_SEPARATOR . $fileName;
 
         if (is_file($filePath)) {
@@ -194,15 +201,24 @@ class Create extends AbstractCommand
         // Get the alternative template and static class options from the config, but only allow one of them.
         $defaultAltTemplate = $this->getConfig()->getTemplateFile();
         $defaultCreationClassName = $this->getConfig()->getTemplateClass();
+        $defaultStyle = $this->getConfig()->getTemplateStyle();
         if ($defaultAltTemplate && $defaultCreationClassName) {
             throw new InvalidArgumentException('Cannot define template:class and template:file at the same time');
         }
 
         // Get the alternative template and static class options from the command line, but only allow one of them.
+        /** @var string|null $altTemplate */
         $altTemplate = $input->getOption('template');
+        /** @var string|null $creationClassName */
         $creationClassName = $input->getOption('class');
+        $style = $input->getOption('style');
+
         if ($altTemplate && $creationClassName) {
             throw new InvalidArgumentException('Cannot use --template and --class at the same time');
+        }
+
+        if ($style && !in_array($style, [Config::TEMPLATE_STYLE_CHANGE, Config::TEMPLATE_STYLE_UP_DOWN])) {
+            throw new InvalidArgumentException('--style should be one of ' . Config::TEMPLATE_STYLE_CHANGE . ' or ' . Config::TEMPLATE_STYLE_UP_DOWN);
         }
 
         // If no commandline options then use the defaults.
@@ -266,7 +282,7 @@ class Create extends AbstractCommand
             $contents = $creationClass->getMigrationTemplate();
         } else {
             // Load the alternative template if it is defined.
-            $contents = file_get_contents($altTemplate ?: $this->getMigrationTemplateFilename());
+            $contents = file_get_contents($altTemplate ?: $this->getMigrationTemplateFilename($style ?: $defaultStyle));
         }
 
         // inject the class names appropriate to this migration
@@ -289,20 +305,21 @@ class Create extends AbstractCommand
 
         // Do we need to do the post creation call to the creation class?
         if (isset($creationClass)) {
+            /** @var \Phinx\Migration\CreationInterface $creationClass */
             $creationClass->postMigrationCreation($filePath, $className, $this->getConfig()->getMigrationBaseClassName());
         }
 
-        $output->writeln('<info>using migration base class</info> ' . $classes['$useClassName']);
+        $output->writeln('<info>using migration base class</info> ' . $classes['$useClassName'], $this->verbosityLevel);
 
         if (!empty($altTemplate)) {
-            $output->writeln('<info>using alternative template</info> ' . $altTemplate);
+            $output->writeln('<info>using alternative template</info> ' . $altTemplate, $this->verbosityLevel);
         } elseif (!empty($creationClassName)) {
-            $output->writeln('<info>using template creation class</info> ' . $creationClassName);
+            $output->writeln('<info>using template creation class</info> ' . $creationClassName, $this->verbosityLevel);
         } else {
-            $output->writeln('<info>using default template</info>');
+            $output->writeln('<info>using default template</info>', $this->verbosityLevel);
         }
 
-        $output->writeln('<info>created</info> ' . str_replace(getcwd() . DIRECTORY_SEPARATOR, '', $filePath));
+        $output->writeln('<info>created</info> ' . Util::relativePath($filePath), $this->verbosityLevel);
 
         return self::CODE_SUCCESS;
     }

@@ -14,20 +14,20 @@ class Index
     /**
      * @var string
      */
-    const UNIQUE = 'unique';
+    public const UNIQUE = 'unique';
 
     /**
      * @var string
      */
-    const INDEX = 'index';
+    public const INDEX = 'index';
 
     /**
      * @var string
      */
-    const FULLTEXT = 'fulltext';
+    public const FULLTEXT = 'fulltext';
 
     /**
-     * @var array
+     * @var string[]|null
      */
     protected $columns;
 
@@ -47,15 +47,24 @@ class Index
     protected $limit;
 
     /**
+     * @var string[]|null
+     */
+    protected $order;
+
+    /**
+     * @var string[]|null
+     */
+    protected $includedColumns;
+
+    /**
      * Sets the index columns.
      *
-     * @param array $columns
-     *
+     * @param string|string[] $columns Columns
      * @return $this
      */
     public function setColumns($columns)
     {
-        $this->columns = $columns;
+        $this->columns = is_string($columns) ? [$columns] : $columns;
 
         return $this;
     }
@@ -63,9 +72,9 @@ class Index
     /**
      * Gets the index columns.
      *
-     * @return array
+     * @return string[]|null
      */
-    public function getColumns()
+    public function getColumns(): ?array
     {
         return $this->columns;
     }
@@ -73,11 +82,10 @@ class Index
     /**
      * Sets the index type.
      *
-     * @param string $type
-     *
+     * @param string $type Type
      * @return $this
      */
-    public function setType($type)
+    public function setType(string $type)
     {
         $this->type = $type;
 
@@ -89,7 +97,7 @@ class Index
      *
      * @return string
      */
-    public function getType()
+    public function getType(): string
     {
         return $this->type;
     }
@@ -97,11 +105,10 @@ class Index
     /**
      * Sets the index name.
      *
-     * @param string $name
-     *
+     * @param string $name Name
      * @return $this
      */
-    public function setName($name)
+    public function setName(string $name)
     {
         $this->name = $name;
 
@@ -113,7 +120,7 @@ class Index
      *
      * @return string|null
      */
-    public function getName()
+    public function getName(): ?string
     {
         return $this->name;
     }
@@ -122,7 +129,6 @@ class Index
      * Sets the index limit.
      *
      * @param int|array $limit limit value or array of limit value
-     *
      * @return $this
      */
     public function setLimit($limit)
@@ -135,7 +141,7 @@ class Index
     /**
      * Gets the index limit.
      *
-     * @return int|array
+     * @return int|array|null
      */
     public function getLimit()
     {
@@ -143,18 +149,62 @@ class Index
     }
 
     /**
-     * Utility method that maps an array of index options to this objects methods.
+     * Sets the index columns sort order.
      *
-     * @param array $options Options
-     *
-     * @throws \RuntimeException
-     *
+     * @param string[] $order column name sort order key value pair
      * @return $this
      */
-    public function setOptions($options)
+    public function setOrder(array $order)
+    {
+        $this->order = $order;
+
+        return $this;
+    }
+
+    /**
+     * Gets the index columns sort order.
+     *
+     * @return string[]|null
+     */
+    public function getOrder(): ?array
+    {
+        return $this->order;
+    }
+
+    /**
+     * Sets the index included columns.
+     *
+     * @param string[] $includedColumns Columns
+     * @return $this
+     */
+    public function setInclude(array $includedColumns)
+    {
+        $this->includedColumns = $includedColumns;
+
+        return $this;
+    }
+
+    /**
+     * Gets the index included columns.
+     *
+     * @return string[]|null
+     */
+    public function getInclude(): ?array
+    {
+        return $this->includedColumns;
+    }
+
+    /**
+     * Utility method that maps an array of index options to this objects methods.
+     *
+     * @param array<string, mixed> $options Options
+     * @throws \RuntimeException
+     * @return $this
+     */
+    public function setOptions(array $options)
     {
         // Valid Options
-        $validOptions = ['type', 'unique', 'name', 'limit'];
+        $validOptions = ['type', 'unique', 'name', 'limit', 'order', 'include'];
         foreach ($options as $option => $value) {
             if (!in_array($option, $validOptions, true)) {
                 throw new RuntimeException(sprintf('"%s" is not a valid index option.', $option));

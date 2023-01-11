@@ -1,7 +1,7 @@
 parameters:
-    level: 5
-    autoload_files:
+    level: 6
+    checkMissingIterableValueType: false
+    paths:
+        - src/
+    bootstrapFiles:
         - tests/bootstrap.php
-    ignoreErrors:
-        - '#Call to an undefined method Cake\\Database\\Type::getDateTimeClassName\(\)#'
-        - '#Parameter \#1 \$size of method .+CollectionInterface::take\(\) expects int, array given.#'

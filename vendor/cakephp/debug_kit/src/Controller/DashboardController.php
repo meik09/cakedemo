@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 /**
  * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
  * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
@@ -12,20 +14,22 @@
  */
 namespace DebugKit\Controller;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 
 /**
  * Dashboard and common DebugKit backend.
+ *
+ * @property \DebugKit\Model\Table\RequestsTable $Requests
  */
 class DashboardController extends DebugKitController
 {
     /**
      * Before filter handler.
      *
-     * @param \Cake\Event\Event $event The event.
+     * @param \Cake\Event\EventInterface $event The event.
      * @return void
      */
-    public function beforeFilter(Event $event)
+    public function beforeFilter(EventInterface $event)
     {
         parent::beforeFilter($event);
 
@@ -36,15 +40,15 @@ class DashboardController extends DebugKitController
      * Dashboard.
      *
      * @return void
-     * @throws \Cake\Network\Exception\NotFoundException
+     * @throws \Cake\Http\Exception\NotFoundException
      */
     public function index()
     {
-        $this->loadModel('DebugKit.Requests');
+        $requestsModel = $this->fetchTable('DebugKit.Requests');
 
         $data = [
-            'driver' => get_class($this->Requests->getConnection()->getDriver()),
-            'rows' => $this->Requests->find()->count(),
+            'driver' => get_class($requestsModel->getConnection()->getDriver()),
+            'rows' => $requestsModel->find()->count(),
         ];
 
         $this->set('connection', $data);
@@ -53,15 +57,16 @@ class DashboardController extends DebugKitController
     /**
      * Reset SQLite DB.
      *
-     * @return \Cake\Http\Response
+     * @return \Cake\Http\Response|null
      */
     public function reset()
     {
         $this->request->allowMethod('post');
-        $this->loadModel('DebugKit.Requests');
+        /** @var \DebugKit\Model\Table\RequestsTable $requestsModel */
+        $requestsModel = $this->fetchTable('DebugKit.Requests');
 
-        $this->Requests->Panels->deleteAll('1=1');
-        $this->Requests->deleteAll('1=1');
+        $requestsModel->Panels->deleteAll('1=1');
+        $requestsModel->deleteAll('1=1');
 
         return $this->redirect(['action' => 'index']);
     }

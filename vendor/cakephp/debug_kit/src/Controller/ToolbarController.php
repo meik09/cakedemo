@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 /**
  * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
  * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
@@ -21,18 +23,21 @@ use Cake\Http\Exception\NotFoundException;
 class ToolbarController extends DebugKitController
 {
     /**
-     * components
-     *
-     * @var array
-     */
-    public $components = ['RequestHandler'];
-
-    /**
      * View class
      *
      * @var string
      */
     public $viewClass = 'Cake\View\JsonView';
+
+    /**
+     * Initialize controller
+     *
+     * @return void
+     */
+    public function initialize(): void
+    {
+        $this->loadComponent('RequestHandler');
+    }
 
     /**
      * Clear a named cache.
@@ -43,13 +48,15 @@ class ToolbarController extends DebugKitController
     public function clearCache()
     {
         $this->request->allowMethod('post');
-        if (!$this->request->getData('name')) {
-            throw new NotFoundException(__d('debug_kit', 'Invalid cache engine name.'));
+        $name = $this->request->getData('name');
+        if (!$name) {
+            throw new NotFoundException('Invalid cache engine name.');
         }
-        $result = Cache::clear(false, $this->request->getData('name'));
-        $this->set([
-            '_serialize' => ['success'],
-            'success' => $result,
-        ]);
+        $success = Cache::clear($name);
+        $message = $success ?
+            sprintf('%s cache cleared.', $name) :
+            sprintf('%s cache could not be cleared.', $name);
+        $this->set(compact('success', 'message'));
+        $this->viewBuilder()->setOption('serialize', ['success', 'message']);
     }
 }

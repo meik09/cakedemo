@@ -8,14 +8,16 @@
 namespace Phinx\Console\Command;
 
 use InvalidArgumentException;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
+#[AsCommand(name: 'breakpoint')]
 class Breakpoint extends AbstractCommand
 {
     /**
-     * @var string
+     * @var string|null
      */
     protected static $defaultName = 'breakpoint';
 
@@ -24,7 +26,7 @@ class Breakpoint extends AbstractCommand
      *
      * @return void
      */
-    protected function configure()
+    protected function configure(): void
     {
         parent::configure();
 
@@ -51,28 +53,27 @@ EOT
     /**
      * Toggle the breakpoint.
      *
-     * @param \Symfony\Component\Console\Input\InputInterface $input
-     * @param \Symfony\Component\Console\Output\OutputInterface $output
-     *
+     * @param \Symfony\Component\Console\Input\InputInterface $input Input
+     * @param \Symfony\Component\Console\Output\OutputInterface $output Output
      * @throws \InvalidArgumentException
-     *
      * @return int integer 0 on success, or an error code.
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->bootstrap($input, $output);
 
+        /** @var string|null $environment */
         $environment = $input->getOption('environment');
-        $version = $input->getOption('target');
+        $version = (int)$input->getOption('target') ?: null;
         $removeAll = $input->getOption('remove-all');
         $set = $input->getOption('set');
         $unset = $input->getOption('unset');
 
         if ($environment === null) {
             $environment = $this->getConfig()->getDefaultEnvironment();
-            $output->writeln('<comment>warning</comment> no environment specified, defaulting to: ' . $environment);
+            $output->writeln('<comment>warning</comment> no environment specified, defaulting to: ' . $environment, $this->verbosityLevel);
         } else {
-            $output->writeln('<info>using environment</info> ' . $environment);
+            $output->writeln('<info>using environment</info> ' . $environment, $this->verbosityLevel);
         }
 
         if (!$this->getConfig()->hasEnvironment($environment)) {

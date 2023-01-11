@@ -151,50 +151,6 @@ class Foo
     }
 
     /**
-     * @return void
-     * @throws \RuntimeException()
-     */
-    public function EmptyThrows()
-    {
-        throw new \RuntimeException();
-        return;
-    }
-
-    /**
-     * @return void
-     * @throws \RuntimeException No dot
-     */
-    public function throwsNoFullStop()
-    {
-        throw new \RuntimeException();
-    }
-
-    /**
-     * @return void
-     * @throws \RuntimeException not a capital.
-     */
-    public function throwsNotCapital()
-    {
-        throw new \RuntimeException();
-    }
-
-    /**
-     * @param int $param not a capital.
-     * @return void
-     */
-    public function paramCommentNotCapital($param)
-    {
-    }
-
-    /**
-     * @param int $param No final dot
-     * @return void
-     */
-    public function paramCommentFullStop($param)
-    {
-    }
-
-    /**
      * @param int $para Comment.
      * @return void
      */
@@ -236,16 +192,55 @@ class Foo
     }
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
     public function inherited()
     {
     }
 
     /**
-     * {@inheritdoc}
+     * @inheritdoc
      */
     public function inheritedCaseInsentive()
+    {
+    }
+
+    /**
+     * Some sentence.
+     *
+     * @param \Foo&\Bar $param Some Param.
+     * @return void
+     */
+    public function intersectionType($param)
+    {
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function withInheritDocNoTags($param)
+    {
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @throws \Exception Comment.
+     * @see \Exception
+     * @link http://cakephp.org
+     * @psalm-suppress SomeError
+     * @phpstan-tag SomeError
+     */
+    public function withInheritDocAllowedTags($param)
+    {
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @param int $param This is not allowed on its own.
+     */
+    public function withInheritDocIncompleteTags($param)
     {
     }
 }

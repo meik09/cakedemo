@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 /**
  * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
  *
@@ -14,6 +16,7 @@ namespace DebugKit\Model\Table;
 
 use Cake\Core\App;
 use PDOException;
+use RuntimeException;
 
 /**
  * A set of methods for building a database table when it is missing.
@@ -54,10 +57,11 @@ trait LazyTableTrait
         try {
             foreach ($fixtures as $name) {
                 $class = App::className($name, 'Test/Fixture', 'Fixture');
-                if ($class === false) {
+                if ($class === null) {
                     throw new \RuntimeException("Unknown fixture '$name'.");
                 }
-                /** @var \Cake\Datasource\FixtureInterface $fixture */
+
+                /** @var \Cake\TestSuite\Fixture\TestFixture $fixture */
                 $fixture = new $class($connection->configName());
                 if (in_array($fixture->table, $existing)) {
                     continue;

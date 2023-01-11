@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 /**
  * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
  * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
@@ -13,9 +15,6 @@
  */
 namespace DebugKit\View\Helper;
 
-use Cake\Core\Configure;
-use Cake\Error\Debugger;
-use Cake\Filesystem\File;
 use Cake\Utility\Hash;
 use Cake\View\Helper;
 
@@ -29,7 +28,6 @@ use Cake\View\Helper;
  */
 class CredentialsHelper extends Helper
 {
-
     /**
      * Helpers property
      *
@@ -41,7 +39,7 @@ class CredentialsHelper extends Helper
      * Replace credentials in url's by *****
      * Example mysql://username:password@localhost/my_db -> mysql://******@localhost/my_db
      *
-     * @param string $in variable to filter
+     * @param mixed $in variable to filter
      * @return string
      */
     public function filter($in)
@@ -60,7 +58,7 @@ class CredentialsHelper extends Helper
         $link = $this->Html->tag('a', '******', [
             'class' => 'filtered-credentials',
             'title' => h($credentials),
-            'onclick' => "this.innerHTML = this.title",
+            'onclick' => 'this.innerHTML = this.title',
         ]);
 
         return h($protocol) . $link . '@' . h($tail);

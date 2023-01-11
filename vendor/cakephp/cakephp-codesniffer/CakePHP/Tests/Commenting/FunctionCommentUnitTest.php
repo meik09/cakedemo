@@ -7,7 +7,7 @@ use PHP_CodeSniffer\Tests\Standards\AbstractSniffUnitTest;
 class FunctionCommentUnitTest extends AbstractSniffUnitTest
 {
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
     public function getErrorList()
     {
@@ -22,13 +22,13 @@ class FunctionCommentUnitTest extends AbstractSniffUnitTest
             97 => 1,
             104 => 1,
             112 => 1,
-            222 => 1,
-            231 => 1,
+            178 => 1,
+            187 => 1,
         ];
     }
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
     public function getWarningList()
     {
@@ -38,17 +38,13 @@ class FunctionCommentUnitTest extends AbstractSniffUnitTest
             45 => 1,
             140 => 1,
             145 => 1,
-            155 => 1,
-            165 => 1,
-            174 => 1,
-            182 => 1,
-            190 => 1,
-            197 => 1,
-            198 => 1,
-            205 => 1,
-            206 => 1,
-            215 => 1,
-            221 => 1,
+            153 => 1,
+            154 => 1,
+            161 => 1,
+            162 => 1,
+            171 => 1,
+            177 => 1,
+            242 => 1,
         ];
     }
 }

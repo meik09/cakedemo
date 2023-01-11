@@ -10,17 +10,16 @@ namespace Phinx\Console\Command;
 use InvalidArgumentException;
 use Phinx\Migration\Manager\Environment;
 use Phinx\Util\Util;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-/**
- * @author Leonid Kuzmin <lndkuzmin@gmail.com>
- */
+#[AsCommand(name: 'test')]
 class Test extends AbstractCommand
 {
     /**
-     * @var string
+     * @var string|null
      */
     protected static $defaultName = 'test';
 
@@ -29,7 +28,7 @@ class Test extends AbstractCommand
      *
      * @return void
      */
-    protected function configure()
+    protected function configure(): void
     {
         parent::configure();
 
@@ -38,11 +37,12 @@ class Test extends AbstractCommand
         $this->setDescription('Verify the configuration file')
             ->setHelp(
                 <<<EOT
-The <info>test</info> command verifies the YAML configuration file and optionally an environment
+The <info>test</info> command is used to verify the phinx configuration file and optionally an environment
 
 <info>phinx test</info>
 <info>phinx test -e development</info>
 
+If the environment option is set, it will test that phinx can connect to the DB associated with that environment
 EOT
             );
     }
@@ -50,14 +50,12 @@ EOT
     /**
      * Verify configuration file
      *
-     * @param \Symfony\Component\Console\Input\InputInterface $input
-     * @param \Symfony\Component\Console\Output\OutputInterface $output
-     *
+     * @param \Symfony\Component\Console\Input\InputInterface $input Input
+     * @param \Symfony\Component\Console\Output\OutputInterface $output Output
      * @throws \InvalidArgumentException
-     *
      * @return int 0 on success
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->loadConfig($input, $output);
         $this->loadManager($input, $output);
@@ -83,7 +81,7 @@ EOT
                 ));
             }
 
-            $output->writeln(sprintf('<info>validating environment</info> %s', $envName));
+            $output->writeln(sprintf('<info>validating environment</info> %s', $envName), $this->verbosityLevel);
             $environment = new Environment(
                 $envName,
                 $this->getConfig()->getEnvironment($envName)
@@ -92,7 +90,7 @@ EOT
             $environment->getAdapter()->connect();
         }
 
-        $output->writeln('<info>success!</info>');
+        $output->writeln('<info>success!</info>', $this->verbosityLevel);
 
         return self::CODE_SUCCESS;
     }

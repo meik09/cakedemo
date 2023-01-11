@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 /**
  * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
  * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
@@ -13,8 +15,6 @@
  * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\TestSuite;
-
-use Cake\Filesystem\File;
 
 /**
  * Compare a string to the contents of a file
@@ -49,7 +49,7 @@ trait StringCompareTrait
      * @param string $result test result as a string
      * @return void
      */
-    public function assertSameAsFile($path, $result)
+    public function assertSameAsFile(string $path, string $result): void
     {
         if (!file_exists($path)) {
             $path = $this->_compareBasePath . $path;
@@ -60,11 +60,10 @@ trait StringCompareTrait
         }
 
         if ($this->_updateComparisons) {
-            $file = new File($path, true);
-            $file->write($result);
+            file_put_contents($path, $result);
         }
 
         $expected = file_get_contents($path);
-        $this->assertTextEquals($expected, $result);
+        $this->assertTextEquals($expected, $result, 'Content does not match file ' . $path);
     }
 }

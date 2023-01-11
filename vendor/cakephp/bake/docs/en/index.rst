@@ -14,13 +14,13 @@ Installation
 Before trying to use or extend bake, make sure it is installed in your
 application. Bake is provided as a plugin that you can install with Composer::
 
-    composer require --dev cakephp/bake:~1.0
+    composer require --dev cakephp/bake:"^2.0"
 
 The above will install bake as a development dependency. This means that it will
-not be installed when you do production deployments. 
+not be installed when you do production deployments.
 
 When using the Twig templates make sure you are loading the
-``WyriHaximus/TwigView`` plugin with its bootstrap.  You can also omit it
+``Cake/TwigView`` plugin with its bootstrap.  You can also omit it
 completely which then makes Bake plugin load this plugin on demand.
 
 .. meta::

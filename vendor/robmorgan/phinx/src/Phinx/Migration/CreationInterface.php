@@ -18,34 +18,32 @@ use Symfony\Component\Console\Output\OutputInterface;
 interface CreationInterface
 {
     /**
-     * @param \Symfony\Component\Console\Input\InputInterface|null $input
-     * @param \Symfony\Component\Console\Output\OutputInterface|null $output
+     * @param \Symfony\Component\Console\Input\InputInterface|null $input Input
+     * @param \Symfony\Component\Console\Output\OutputInterface|null $output Output
      */
-    public function __construct(InputInterface $input = null, OutputInterface $output = null);
+    public function __construct(?InputInterface $input = null, ?OutputInterface $output = null);
 
     /**
-     * @param \Symfony\Component\Console\Input\InputInterface $input
-     *
-     * @return \Phinx\Migration\CreationInterface
+     * @param \Symfony\Component\Console\Input\InputInterface $input Input
+     * @return $this
      */
     public function setInput(InputInterface $input);
 
     /**
-     * @param \Symfony\Component\Console\Output\OutputInterface $output
-     *
-     * @return \Phinx\Migration\CreationInterface
+     * @param \Symfony\Component\Console\Output\OutputInterface $output Output
+     * @return $this
      */
     public function setOutput(OutputInterface $output);
 
     /**
      * @return \Symfony\Component\Console\Input\InputInterface
      */
-    public function getInput();
+    public function getInput(): InputInterface;
 
     /**
      * @return \Symfony\Component\Console\Output\OutputInterface
      */
-    public function getOutput();
+    public function getOutput(): OutputInterface;
 
     /**
      * Get the migration template.
@@ -54,7 +52,7 @@ interface CreationInterface
      *
      * @return string The content of the template for Phinx to amend.
      */
-    public function getMigrationTemplate();
+    public function getMigrationTemplate(): string;
 
     /**
      * Post Migration Creation.
@@ -65,8 +63,7 @@ interface CreationInterface
      * @param string $migrationFilename The name of the newly created migration.
      * @param string $className The class name.
      * @param string $baseClassName The name of the base class.
-     *
      * @return void
      */
-    public function postMigrationCreation($migrationFilename, $className, $baseClassName);
+    public function postMigrationCreation(string $migrationFilename, string $className, string $baseClassName): void;
 }

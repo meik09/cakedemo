@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 /**
  * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
  * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
@@ -56,12 +58,12 @@ TEXT;
      * This function returns the same variable that was passed.
      * Only runs if debug mode is enabled.
      *
-     * @param Query $query Query to show SQL statements for.
+     * @param \Cake\Database\Query $query Query to show SQL statements for.
      * @param bool $showValues Renders the SQL statement with bound variables.
      * @param bool|null $showHtml If set to true, the method prints the debug
      *    data in a browser-friendly way.
      * @param int $stackDepth Provides a hint as to which file in the call stack to reference.
-     * @return Query
+     * @return \Cake\Database\Query
      */
     public static function sql(Query $query, $showValues = true, $showHtml = null, $stackDepth = 0)
     {
@@ -71,11 +73,10 @@ TEXT;
 
         $sql = (string)$query;
         if ($showValues) {
-            $sql = method_exists($query, 'getValueBinder')
-                ? static::interpolate($sql, $query->getValueBinder()->bindings())
-                : static::interpolate($sql, $query->valueBinder()->bindings());
+            $sql = self::interpolate($sql, $query->getValueBinder()->bindings());
         }
 
+        /** @var array $trace */
         $trace = Debugger::trace(['start' => 1, 'depth' => $stackDepth + 2, 'format' => 'array']);
         $file = isset($trace[$stackDepth]) ? $trace[$stackDepth]['file'] : 'n/a';
         $line = isset($trace[$stackDepth]) ? $trace[$stackDepth]['line'] : 0;
@@ -91,16 +92,16 @@ TEXT;
             $file = str_replace($search, '', $file);
         }
 
-        $template = static::$templateHtml;
+        $template = self::$templateHtml;
         $sqlHighlight = true;
         if ((PHP_SAPI === 'cli' || PHP_SAPI === 'phpdbg') || $showHtml === false) {
-            $template = static::$templateText;
+            $template = self::$templateText;
             $sqlHighlight = false;
             if ($file && $line) {
                 $lineInfo = sprintf('%s (line %s)', $file, $line);
             }
         }
-        if ($showHtml === null && $template !== static::$templateText) {
+        if ($showHtml === null && $template !== self::$templateText) {
             $showHtml = true;
         }
 
@@ -112,7 +113,7 @@ TEXT;
         );
 
         if ($showHtml) {
-            $template = static::$templateHtml;
+            $template = self::$templateHtml;
             if ($file && $line) {
                 $lineInfo = sprintf('<span><strong>%s</strong> (line <strong>%s</strong>)</span>', $file, $line);
             }
@@ -129,7 +130,7 @@ TEXT;
      * Only runs if debug mode is enabled.
      * It will otherwise just continue code execution and ignore this function.
      *
-     * @param Query $query Query to show SQL statements for.
+     * @param \Cake\Database\Query $query Query to show SQL statements for.
      * @param bool $showValues Renders the SQL statement with bound variables.
      * @param bool|null $showHtml If set to true, the method prints the debug
      *    data in a browser-friendly way.

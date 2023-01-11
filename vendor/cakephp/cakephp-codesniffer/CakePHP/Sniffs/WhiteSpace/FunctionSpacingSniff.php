@@ -27,7 +27,7 @@ use PHP_CodeSniffer\Util\Tokens;
 class FunctionSpacingSniff implements Sniff
 {
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
     public function register()
     {
@@ -35,7 +35,7 @@ class FunctionSpacingSniff implements Sniff
     }
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
     public function process(File $phpCsFile, $stackPointer)
     {
@@ -62,7 +62,11 @@ class FunctionSpacingSniff implements Sniff
             }
 
             if ($tokens[$nextContentIndex]['line'] - $tokens[$semicolonIndex]['line'] <= 1) {
-                $fix = $phpCsFile->addFixableError('Every function/method needs a newline afterwards', $closingParenthesisIndex, 'Abstract');
+                $fix = $phpCsFile->addFixableError(
+                    'Every function/method needs a newline afterwards',
+                    $closingParenthesisIndex,
+                    'Abstract'
+                );
                 if ($fix) {
                     $phpCsFile->fixer->addNewline($semicolonIndex);
                 }
@@ -94,7 +98,6 @@ class FunctionSpacingSniff implements Sniff
      * @param \PHP_CodeSniffer\Files\File $phpCsFile File
      * @param int $closingBraceIndex Index
      * @param int|null $nextContentIndex Index
-     *
      * @return void
      */
     protected function assertNewLineAtTheEnd(File $phpCsFile, $closingBraceIndex, $nextContentIndex)
@@ -102,7 +105,11 @@ class FunctionSpacingSniff implements Sniff
         $tokens = $phpCsFile->getTokens();
 
         if (!$nextContentIndex || $tokens[$nextContentIndex]['line'] - $tokens[$closingBraceIndex]['line'] <= 1) {
-            $fix = $phpCsFile->addFixableError('Every function/method needs a newline afterwards', $closingBraceIndex, 'Concrete');
+            $fix = $phpCsFile->addFixableError(
+                'Every function/method needs a newline afterwards',
+                $closingBraceIndex,
+                'Concrete'
+            );
             if ($fix) {
                 $phpCsFile->fixer->addNewline($closingBraceIndex);
             }
@@ -114,7 +121,6 @@ class FunctionSpacingSniff implements Sniff
      *
      * @param \PHP_CodeSniffer\Files\File $phpCsFile File
      * @param int $stackPointer Stack pointer
-     *
      * @return void
      */
     protected function assertNewLineAtTheBeginning(File $phpCsFile, $stackPointer)
@@ -146,7 +152,11 @@ class FunctionSpacingSniff implements Sniff
             return;
         }
 
-        $fix = $phpCsFile->addFixableError('Every function/method needs a newline before', $firstTokenInLineIndex, 'Concrete');
+        $fix = $phpCsFile->addFixableError(
+            'Every function/method needs a newline before',
+            $firstTokenInLineIndex,
+            'Concrete'
+        );
         if ($fix) {
             $phpCsFile->fixer->addNewline($prevContentIndex);
         }

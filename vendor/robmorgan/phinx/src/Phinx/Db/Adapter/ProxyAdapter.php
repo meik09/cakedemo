@@ -32,34 +32,30 @@ use Phinx\Migration\IrreversibleMigrationException;
 class ProxyAdapter extends AdapterWrapper
 {
     /**
-     * @var array
+     * @var \Phinx\Db\Action\Action[]
      */
     protected $commands = [];
 
     /**
      * @inheritDoc
      */
-    public function getAdapterType()
+    public function getAdapterType(): string
     {
         return 'ProxyAdapter';
     }
 
     /**
-     * {@inheritDoc}
-     *
-     * @return void
+     * @inheritDoc
      */
-    public function createTable(Table $table, array $columns = [], array $indexes = [])
+    public function createTable(Table $table, array $columns = [], array $indexes = []): void
     {
         $this->commands[] = new CreateTable($table);
     }
 
     /**
-     * {@inheritDoc}
-     *
-     * @return void
+     * @inheritDoc
      */
-    public function executeActions(Table $table, array $actions)
+    public function executeActions(Table $table, array $actions): void
     {
         $this->commands = array_merge($this->commands, $actions);
     }
@@ -68,46 +64,51 @@ class ProxyAdapter extends AdapterWrapper
      * Gets an array of the recorded commands in reverse.
      *
      * @throws \Phinx\Migration\IrreversibleMigrationException if a command cannot be reversed.
-     *
      * @return \Phinx\Db\Plan\Intent
      */
-    public function getInvertedCommands()
+    public function getInvertedCommands(): Intent
     {
         $inverted = new Intent();
 
-        foreach (array_reverse($this->commands) as $com) {
+        foreach (array_reverse($this->commands) as $command) {
             switch (true) {
-                case $com instanceof CreateTable:
-                    $inverted->addAction(new DropTable($com->getTable()));
+                case $command instanceof CreateTable:
+                    /** @var \Phinx\Db\Action\CreateTable $command */
+                    $inverted->addAction(new DropTable($command->getTable()));
                     break;
 
-                case $com instanceof RenameTable:
-                    $inverted->addAction(new RenameTable(new Table($com->getNewName()), $com->getTable()->getName()));
+                case $command instanceof RenameTable:
+                    /** @var \Phinx\Db\Action\RenameTable $command */
+                    $inverted->addAction(new RenameTable(new Table($command->getNewName()), $command->getTable()->getName()));
                     break;
 
-                case $com instanceof AddColumn:
-                    $inverted->addAction(new RemoveColumn($com->getTable(), $com->getColumn()));
+                case $command instanceof AddColumn:
+                    /** @var \Phinx\Db\Action\AddColumn $command */
+                    $inverted->addAction(new RemoveColumn($command->getTable(), $command->getColumn()));
                     break;
 
-                case $com instanceof RenameColumn:
-                    $column = clone $com->getColumn();
+                case $command instanceof RenameColumn:
+                    /** @var \Phinx\Db\Action\RenameColumn $command */
+                    $column = clone $command->getColumn();
                     $name = $column->getName();
-                    $column->setName($com->getNewName());
-                    $inverted->addAction(new RenameColumn($com->getTable(), $column, $name));
+                    $column->setName($command->getNewName());
+                    $inverted->addAction(new RenameColumn($command->getTable(), $column, $name));
                     break;
 
-                case $com instanceof AddIndex:
-                    $inverted->addAction(new DropIndex($com->getTable(), $com->getIndex()));
+                case $command instanceof AddIndex:
+                    /** @var \Phinx\Db\Action\AddIndex $command */
+                    $inverted->addAction(new DropIndex($command->getTable(), $command->getIndex()));
                     break;
 
-                case $com instanceof AddForeignKey:
-                    $inverted->addAction(new DropForeignKey($com->getTable(), $com->getForeignKey()));
+                case $command instanceof AddForeignKey:
+                    /** @var \Phinx\Db\Action\AddForeignKey $command */
+                    $inverted->addAction(new DropForeignKey($command->getTable(), $command->getForeignKey()));
                     break;
 
                 default:
                     throw new IrreversibleMigrationException(sprintf(
                         'Cannot reverse a "%s" command',
-                        get_class($com)
+                        get_class($command)
                     ));
             }
         }
@@ -120,7 +121,7 @@ class ProxyAdapter extends AdapterWrapper
      *
      * @return void
      */
-    public function executeInvertedCommands()
+    public function executeInvertedCommands(): void
     {
         $plan = new Plan($this->getInvertedCommands());
         $plan->executeInverse($this->getAdapter());

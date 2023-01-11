@@ -12,12 +12,12 @@ class Expression
     /**
      * @var string The expression
      */
-    private $value;
+    protected $value;
 
     /**
      * @param string $value The expression
      */
-    public function __construct($value)
+    public function __construct(string $value)
     {
         $this->value = $value;
     }
@@ -25,17 +25,16 @@ class Expression
     /**
      * @return string Returns the expression
      */
-    public function __toString()
+    public function __toString(): string
     {
         return $this->value;
     }
 
     /**
      * @param string $value The expression
-     *
      * @return self
      */
-    public static function from($value)
+    public static function from(string $value): Expression
     {
         return new self($value);
     }

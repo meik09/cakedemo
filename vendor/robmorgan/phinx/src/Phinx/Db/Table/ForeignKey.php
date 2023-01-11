@@ -12,13 +12,18 @@ use RuntimeException;
 
 class ForeignKey
 {
-    const CASCADE = 'CASCADE';
-    const RESTRICT = 'RESTRICT';
-    const SET_NULL = 'SET NULL';
-    const NO_ACTION = 'NO ACTION';
+    public const CASCADE = 'CASCADE';
+    public const RESTRICT = 'RESTRICT';
+    public const SET_NULL = 'SET NULL';
+    public const NO_ACTION = 'NO ACTION';
 
     /**
-     * @var array
+     * @var array<string>
+     */
+    protected static $validOptions = ['delete', 'update', 'constraint'];
+
+    /**
+     * @var string[]
      */
     protected $columns = [];
 
@@ -28,30 +33,29 @@ class ForeignKey
     protected $referencedTable;
 
     /**
-     * @var array
+     * @var string[]
      */
     protected $referencedColumns = [];
 
     /**
-     * @var string
+     * @var string|null
      */
     protected $onDelete;
 
     /**
-     * @var string
+     * @var string|null
      */
     protected $onUpdate;
 
     /**
-     * @var string|bool
+     * @var string|null
      */
     protected $constraint;
 
     /**
      * Sets the foreign key columns.
      *
-     * @param array|string $columns
-     *
+     * @param string[]|string $columns Columns
      * @return $this
      */
     public function setColumns($columns)
@@ -64,9 +68,9 @@ class ForeignKey
     /**
      * Gets the foreign key columns.
      *
-     * @return array
+     * @return string[]
      */
-    public function getColumns()
+    public function getColumns(): array
     {
         return $this->columns;
     }
@@ -75,7 +79,6 @@ class ForeignKey
      * Sets the foreign key referenced table.
      *
      * @param \Phinx\Db\Table\Table $table The table this KEY is pointing to
-     *
      * @return $this
      */
     public function setReferencedTable(Table $table)
@@ -90,7 +93,7 @@ class ForeignKey
      *
      * @return \Phinx\Db\Table\Table
      */
-    public function getReferencedTable()
+    public function getReferencedTable(): Table
     {
         return $this->referencedTable;
     }
@@ -98,8 +101,7 @@ class ForeignKey
     /**
      * Sets the foreign key referenced columns.
      *
-     * @param array $referencedColumns
-     *
+     * @param string[] $referencedColumns Referenced columns
      * @return $this
      */
     public function setReferencedColumns(array $referencedColumns)
@@ -112,9 +114,9 @@ class ForeignKey
     /**
      * Gets the foreign key referenced columns.
      *
-     * @return array
+     * @return string[]
      */
-    public function getReferencedColumns()
+    public function getReferencedColumns(): array
     {
         return $this->referencedColumns;
     }
@@ -122,11 +124,10 @@ class ForeignKey
     /**
      * Sets ON DELETE action for the foreign key.
      *
-     * @param string $onDelete
-     *
+     * @param string $onDelete On Delete
      * @return $this
      */
-    public function setOnDelete($onDelete)
+    public function setOnDelete(string $onDelete)
     {
         $this->onDelete = $this->normalizeAction($onDelete);
 
@@ -136,9 +137,9 @@ class ForeignKey
     /**
      * Gets ON DELETE action for the foreign key.
      *
-     * @return string
+     * @return string|null
      */
-    public function getOnDelete()
+    public function getOnDelete(): ?string
     {
         return $this->onDelete;
     }
@@ -146,9 +147,9 @@ class ForeignKey
     /**
      * Gets ON UPDATE action for the foreign key.
      *
-     * @return string
+     * @return string|null
      */
-    public function getOnUpdate()
+    public function getOnUpdate(): ?string
     {
         return $this->onUpdate;
     }
@@ -156,11 +157,10 @@ class ForeignKey
     /**
      * Sets ON UPDATE action for the foreign key.
      *
-     * @param string $onUpdate
-     *
+     * @param string $onUpdate On Update
      * @return $this
      */
-    public function setOnUpdate($onUpdate)
+    public function setOnUpdate(string $onUpdate)
     {
         $this->onUpdate = $this->normalizeAction($onUpdate);
 
@@ -170,11 +170,10 @@ class ForeignKey
     /**
      * Sets constraint for the foreign key.
      *
-     * @param string $constraint
-     *
+     * @param string $constraint Constraint
      * @return $this
      */
-    public function setConstraint($constraint)
+    public function setConstraint(string $constraint)
     {
         $this->constraint = $constraint;
 
@@ -184,9 +183,9 @@ class ForeignKey
     /**
      * Gets constraint name for the foreign key.
      *
-     * @return string|bool
+     * @return string|null
      */
-    public function getConstraint()
+    public function getConstraint(): ?string
     {
         return $this->constraint;
     }
@@ -194,18 +193,14 @@ class ForeignKey
     /**
      * Utility method that maps an array of index options to this objects methods.
      *
-     * @param array $options Options
-     *
+     * @param array<string, mixed> $options Options
      * @throws \RuntimeException
-     *
      * @return $this
      */
-    public function setOptions($options)
+    public function setOptions(array $options)
     {
-        // Valid Options
-        $validOptions = ['delete', 'update', 'constraint'];
         foreach ($options as $option => $value) {
-            if (!in_array($option, $validOptions, true)) {
+            if (!in_array($option, static::$validOptions, true)) {
                 throw new RuntimeException(sprintf('"%s" is not a valid foreign key option.', $option));
             }
 
@@ -226,13 +221,11 @@ class ForeignKey
     /**
      * From passed value checks if it's correct and fixes if needed
      *
-     * @param string $action
-     *
+     * @param string $action Action
      * @throws \InvalidArgumentException
-     *
      * @return string
      */
-    protected function normalizeAction($action)
+    protected function normalizeAction(string $action): string
     {
         $constantName = 'static::' . str_replace(' ', '_', strtoupper(trim($action)));
         if (!defined($constantName)) {

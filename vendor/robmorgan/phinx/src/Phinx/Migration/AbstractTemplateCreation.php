@@ -23,10 +23,10 @@ abstract class AbstractTemplateCreation implements CreationInterface
     protected $output;
 
     /**
-     * @param \Symfony\Component\Console\Input\InputInterface|null $input
-     * @param \Symfony\Component\Console\Output\OutputInterface|null $output
+     * @param \Symfony\Component\Console\Input\InputInterface|null $input Input
+     * @param \Symfony\Component\Console\Output\OutputInterface|null $output Output
      */
-    public function __construct(InputInterface $input = null, OutputInterface $output = null)
+    public function __construct(?InputInterface $input = null, ?OutputInterface $output = null)
     {
         if ($input !== null) {
             $this->setInput($input);
@@ -39,7 +39,7 @@ abstract class AbstractTemplateCreation implements CreationInterface
     /**
      * @inheritDoc
      */
-    public function getInput()
+    public function getInput(): InputInterface
     {
         return $this->input;
     }
@@ -47,7 +47,7 @@ abstract class AbstractTemplateCreation implements CreationInterface
     /**
      * @inheritDoc
      */
-    public function setInput(InputInterface $input)
+    public function setInput(InputInterface $input): CreationInterface
     {
         $this->input = $input;
 
@@ -57,7 +57,7 @@ abstract class AbstractTemplateCreation implements CreationInterface
     /**
      * @inheritDoc
      */
-    public function getOutput()
+    public function getOutput(): OutputInterface
     {
         return $this->output;
     }
@@ -65,7 +65,7 @@ abstract class AbstractTemplateCreation implements CreationInterface
     /**
      * @inheritDoc
      */
-    public function setOutput(OutputInterface $output)
+    public function setOutput(OutputInterface $output): CreationInterface
     {
         $this->output = $output;
 

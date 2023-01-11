@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 /**
  * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
  * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
@@ -17,11 +19,9 @@ use Cake\Error\Debugger;
 
 /**
  * Contains methods for Profiling and creating timers.
- *
  */
 class DebugTimer
 {
-
     /**
      * Internal timers array
      *
@@ -132,7 +132,7 @@ class DebugTimer
             $_end = $now;
         }
         $times['Core Processing (Derived from $_SERVER["REQUEST_TIME"])'] = [
-            'message' => __d('debug_kit', 'Core Processing (Derived from $_SERVER["REQUEST_TIME"])'),
+            'message' => 'Core Processing (Derived from $_SERVER["REQUEST_TIME"])',
             'start' => 0,
             'end' => $_end - $start,
             'time' => round($_end - $start, 6),
@@ -193,7 +193,7 @@ class DebugTimer
         $start = self::requestStartTime();
         $now = microtime(true);
 
-        return ($now - $start);
+        return $now - $start;
     }
 
     /**
@@ -211,6 +211,6 @@ class DebugTimer
             $startTime = env('REQUEST_TIME');
         }
 
-        return $startTime;
+        return (float)$startTime;
     }
 }

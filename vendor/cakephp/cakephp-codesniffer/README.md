@@ -1,16 +1,16 @@
 # CakePHP Code Sniffer
 
-[![Build Status](https://img.shields.io/travis/cakephp/cakephp-codesniffer/master.svg?style=flat-square)](https://travis-ci.org/cakephp/cakephp-codesniffer)
-[![Coverage Status](https://img.shields.io/codecov/c/github/cakephp/cakephp-codesniffer.svg?style=flat-square)](https://codecov.io/github/cakephp/cakephp-codesniffer)
+[![Build Status](https://img.shields.io/travis/com/cakephp/cakephp-codesniffer/master.svg?style=flat-square)](https://travis-ci.com/cakephp/cakephp-codesniffer)
 [![Total Downloads](https://img.shields.io/packagist/dt/cakephp/cakephp-codesniffer.svg?style=flat-square)](https://packagist.org/packages/cakephp/cakephp-codesniffer)
 [![Latest Stable Version](https://img.shields.io/packagist/v/cakephp/cakephp-codesniffer.svg?style=flat-square)](https://packagist.org/packages/cakephp/cakephp-codesniffer)
+[![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE)
 
-This code works with [phpcs](http://pear.php.net/manual/en/package.php.php-codesniffer.php)
+This code works with [squizlabs/php_codesniffer](https://github.com/squizlabs/PHP_CodeSniffer)
 and checks code against the coding standards used in CakePHP.
 
-:warning: The `master` branch contains codesniffer rules that are based on the
-PSR2 standard. If you want to check against the historical CakePHP coding
-standard use any of the `1.x` releases.
+This sniffer package follows [PSR-12](https://www.php-fig.org/psr/psr-12/) completely and ships with a lot of additional fixers on top.
+
+[List of included sniffs](/docs)
 
 ## Which version should I use?
 
@@ -19,7 +19,7 @@ standard use any of the `1.x` releases.
 | 1.x | 2.x | PHP 5.4  |
 | 2.x | 3.x | PHP 5.5 |
 | 3.x | 3.x | PHP 5.6 |
-| 4.x | 4.x | PHP 7.1 |
+| 4.x | 4.x | PHP 7.2 |
 
 ## Installation
 
@@ -29,7 +29,9 @@ You should install this codesniffer with composer:
 	vendor/bin/phpcs --config-set installed_paths /path/to/your/app/vendor/cakephp/cakephp-codesniffer
 
 The second command lets `phpcs` know where to find your new sniffs. Ensure that
-you do not overwrite any existing `installed_paths` value.
+you do not overwrite any existing `installed_paths` value. Alternatively, install
+the [`dealerdirect/phpcodesniffer-composer-installer`](https://github.com/Dealerdirect/phpcodesniffer-composer-installer)
+composer package which will handle configuring the `phpcs` `installed_paths` for you.
 
 ## Usage
 

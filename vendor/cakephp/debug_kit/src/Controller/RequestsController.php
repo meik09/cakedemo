@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 /**
  * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
  * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
@@ -12,7 +14,7 @@
  */
 namespace DebugKit\Controller;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 
 /**
  * Provides access to panel data.
@@ -24,10 +26,10 @@ class RequestsController extends DebugKitController
     /**
      * Before filter handler.
      *
-     * @param \Cake\Event\Event $event The event.
+     * @param \Cake\Event\EventInterface $event The event.
      * @return void
      */
-    public function beforeFilter(Event $event)
+    public function beforeFilter(EventInterface $event)
     {
         parent::beforeFilter($event);
 
@@ -37,10 +39,10 @@ class RequestsController extends DebugKitController
     /**
      * Before render handler.
      *
-     * @param \Cake\Event\Event $event The event.
+     * @param \Cake\Event\EventInterface $event The event.
      * @return void
      */
-    public function beforeRender(Event $event)
+    public function beforeRender(EventInterface $event)
     {
         $this->viewBuilder()
             ->setLayout('DebugKit.toolbar')

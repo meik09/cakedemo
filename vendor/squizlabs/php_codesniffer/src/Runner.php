@@ -232,7 +232,7 @@ class Runner
     /**
      * Exits if the minimum requirements of PHP_CodeSniffer are not met.
      *
-     * @return void
+     * @return array
      * @throws \PHP_CodeSniffer\Exceptions\DeepExitException If the requirements are not met.
      */
     public function checkRequirements()
@@ -291,7 +291,7 @@ class Runner
 
         // Ensure this option is enabled or else line endings will not always
         // be detected properly for files created on a Mac with the /r line ending.
-        @ini_set('auto_detect_line_endings', true);
+        ini_set('auto_detect_line_endings', true);
 
         // Disable the PCRE JIT as this caused issues with parallel running.
         ini_set('pcre.jit', false);
@@ -460,7 +460,10 @@ class Runner
                 if ($pid === -1) {
                     throw new RuntimeException('Failed to create child process');
                 } else if ($pid !== 0) {
-                    $childProcs[$pid] = $childOutFilename;
+                    $childProcs[] = [
+                        'pid' => $pid,
+                        'out' => $childOutFilename,
+                    ];
                 } else {
                     // Move forward to the start of the batch.
                     $todo->rewind();
@@ -484,7 +487,6 @@ class Runner
                         $file = $todo->current();
 
                         if ($file->ignored === true) {
-                            $todo->next();
                             continue;
                         }
 
@@ -533,7 +535,7 @@ class Runner
 
                     $output .= ";\n?".'>';
                     file_put_contents($childOutFilename, $output);
-                    exit();
+                    exit($pid);
                 }//end if
             }//end for
 
@@ -716,56 +718,54 @@ class Runner
         $success = true;
 
         while (count($childProcs) > 0) {
-            $pid = pcntl_waitpid(0, $status);
-            if ($pid <= 0) {
-                continue;
-            }
+            foreach ($childProcs as $key => $procData) {
+                $res = pcntl_waitpid($procData['pid'], $status, WNOHANG);
+                if ($res === $procData['pid']) {
+                    if (file_exists($procData['out']) === true) {
+                        include $procData['out'];
 
-            $out = $childProcs[$pid];
-            unset($childProcs[$pid]);
-            if (file_exists($out) === false) {
-                continue;
-            }
+                        unlink($procData['out']);
+                        unset($childProcs[$key]);
 
-            include $out;
-            unlink($out);
+                        $numProcessed++;
 
-            $numProcessed++;
+                        if (isset($childOutput) === false) {
+                            // The child process died, so the run has failed.
+                            $file = new DummyFile(null, $this->ruleset, $this->config);
+                            $file->setErrorCounts(1, 0, 0, 0);
+                            $this->printProgress($file, $totalBatches, $numProcessed);
+                            $success = false;
+                            continue;
+                        }
 
-            if (isset($childOutput) === false) {
-                // The child process died, so the run has failed.
-                $file = new DummyFile('', $this->ruleset, $this->config);
-                $file->setErrorCounts(1, 0, 0, 0);
-                $this->printProgress($file, $totalBatches, $numProcessed);
-                $success = false;
-                continue;
-            }
+                        $this->reporter->totalFiles    += $childOutput['totalFiles'];
+                        $this->reporter->totalErrors   += $childOutput['totalErrors'];
+                        $this->reporter->totalWarnings += $childOutput['totalWarnings'];
+                        $this->reporter->totalFixable  += $childOutput['totalFixable'];
+                        $this->reporter->totalFixed    += $childOutput['totalFixed'];
 
-            $this->reporter->totalFiles    += $childOutput['totalFiles'];
-            $this->reporter->totalErrors   += $childOutput['totalErrors'];
-            $this->reporter->totalWarnings += $childOutput['totalWarnings'];
-            $this->reporter->totalFixable  += $childOutput['totalFixable'];
-            $this->reporter->totalFixed    += $childOutput['totalFixed'];
+                        if (isset($debugOutput) === true) {
+                            echo $debugOutput;
+                        }
 
-            if (isset($debugOutput) === true) {
-                echo $debugOutput;
-            }
+                        if (isset($childCache) === true) {
+                            foreach ($childCache as $path => $cache) {
+                                Cache::set($path, $cache);
+                            }
+                        }
 
-            if (isset($childCache) === true) {
-                foreach ($childCache as $path => $cache) {
-                    Cache::set($path, $cache);
-                }
-            }
-
-            // Fake a processed file so we can print progress output for the batch.
-            $file = new DummyFile('', $this->ruleset, $this->config);
-            $file->setErrorCounts(
-                $childOutput['totalErrors'],
-                $childOutput['totalWarnings'],
-                $childOutput['totalFixable'],
-                $childOutput['totalFixed']
-            );
-            $this->printProgress($file, $totalBatches, $numProcessed);
+                        // Fake a processed file so we can print progress output for the batch.
+                        $file = new DummyFile(null, $this->ruleset, $this->config);
+                        $file->setErrorCounts(
+                            $childOutput['totalErrors'],
+                            $childOutput['totalWarnings'],
+                            $childOutput['totalFixable'],
+                            $childOutput['totalFixed']
+                        );
+                        $this->printProgress($file, $totalBatches, $numProcessed);
+                    }//end if
+                }//end if
+            }//end foreach
         }//end while
 
         return $success;

@@ -7,6 +7,7 @@
 
 namespace Phinx\Migration;
 
+use Cake\Database\Query;
 use Phinx\Db\Adapter\AdapterInterface;
 use Phinx\Db\Table;
 use RuntimeException;
@@ -31,22 +32,22 @@ abstract class AbstractMigration implements MigrationInterface
     protected $environment;
 
     /**
-     * @var float
+     * @var int
      */
     protected $version;
 
     /**
-     * @var \Phinx\Db\Adapter\AdapterInterface
+     * @var \Phinx\Db\Adapter\AdapterInterface|null
      */
     protected $adapter;
 
     /**
-     * @var \Symfony\Component\Console\Output\OutputInterface
+     * @var \Symfony\Component\Console\Output\OutputInterface|null
      */
     protected $output;
 
     /**
-     * @var \Symfony\Component\Console\Input\InputInterface
+     * @var \Symfony\Component\Console\Input\InputInterface|null
      */
     protected $input;
 
@@ -60,17 +61,17 @@ abstract class AbstractMigration implements MigrationInterface
     /**
      * List of all the table objects created by this migration
      *
-     * @var array
+     * @var array<\Phinx\Db\Table>
      */
     protected $tables = [];
 
     /**
      * @param string $environment Environment Detected
      * @param int $version Migration Version
-     * @param \Symfony\Component\Console\Input\InputInterface|null $input
-     * @param \Symfony\Component\Console\Output\OutputInterface|null $output
+     * @param \Symfony\Component\Console\Input\InputInterface|null $input Input
+     * @param \Symfony\Component\Console\Output\OutputInterface|null $output Output
      */
-    final public function __construct($environment, $version, InputInterface $input = null, OutputInterface $output = null)
+    final public function __construct(string $environment, int $version, ?InputInterface $input = null, ?OutputInterface $output = null)
     {
         $this->environment = $environment;
         $this->version = $version;
@@ -82,23 +83,12 @@ abstract class AbstractMigration implements MigrationInterface
         if ($output !== null) {
             $this->setOutput($output);
         }
-
-        $this->init();
-    }
-
-    /**
-     * Initialize method.
-     *
-     * @return void
-     */
-    protected function init()
-    {
     }
 
     /**
      * @inheritDoc
      */
-    public function setAdapter(AdapterInterface $adapter)
+    public function setAdapter(AdapterInterface $adapter): MigrationInterface
     {
         $this->adapter = $adapter;
 
@@ -108,7 +98,7 @@ abstract class AbstractMigration implements MigrationInterface
     /**
      * @inheritDoc
      */
-    public function getAdapter()
+    public function getAdapter(): ?AdapterInterface
     {
         return $this->adapter;
     }
@@ -116,7 +106,7 @@ abstract class AbstractMigration implements MigrationInterface
     /**
      * @inheritDoc
      */
-    public function setInput(InputInterface $input)
+    public function setInput(InputInterface $input): MigrationInterface
     {
         $this->input = $input;
 
@@ -126,7 +116,7 @@ abstract class AbstractMigration implements MigrationInterface
     /**
      * @inheritDoc
      */
-    public function getInput()
+    public function getInput(): ?InputInterface
     {
         return $this->input;
     }
@@ -134,7 +124,7 @@ abstract class AbstractMigration implements MigrationInterface
     /**
      * @inheritDoc
      */
-    public function setOutput(OutputInterface $output)
+    public function setOutput(OutputInterface $output): MigrationInterface
     {
         $this->output = $output;
 
@@ -144,7 +134,7 @@ abstract class AbstractMigration implements MigrationInterface
     /**
      * @inheritDoc
      */
-    public function getOutput()
+    public function getOutput(): ?OutputInterface
     {
         return $this->output;
     }
@@ -152,7 +142,7 @@ abstract class AbstractMigration implements MigrationInterface
     /**
      * @inheritDoc
      */
-    public function getName()
+    public function getName(): string
     {
         return static::class;
     }
@@ -160,7 +150,7 @@ abstract class AbstractMigration implements MigrationInterface
     /**
      * @inheritDoc
      */
-    public function getEnvironment()
+    public function getEnvironment(): string
     {
         return $this->environment;
     }
@@ -168,7 +158,7 @@ abstract class AbstractMigration implements MigrationInterface
     /**
      * @inheritDoc
      */
-    public function setVersion($version)
+    public function setVersion($version): MigrationInterface
     {
         $this->version = $version;
 
@@ -178,7 +168,7 @@ abstract class AbstractMigration implements MigrationInterface
     /**
      * @inheritDoc
      */
-    public function getVersion()
+    public function getVersion(): int
     {
         return $this->version;
     }
@@ -186,7 +176,7 @@ abstract class AbstractMigration implements MigrationInterface
     /**
      * @inheritDoc
      */
-    public function setMigratingUp($isMigratingUp)
+    public function setMigratingUp(bool $isMigratingUp): MigrationInterface
     {
         $this->isMigratingUp = $isMigratingUp;
 
@@ -196,7 +186,7 @@ abstract class AbstractMigration implements MigrationInterface
     /**
      * @inheritDoc
      */
-    public function isMigratingUp()
+    public function isMigratingUp(): bool
     {
         return $this->isMigratingUp;
     }
@@ -204,23 +194,23 @@ abstract class AbstractMigration implements MigrationInterface
     /**
      * @inheritDoc
      */
-    public function execute($sql)
+    public function execute(string $sql, array $params = []): int
     {
-        return $this->getAdapter()->execute($sql);
+        return $this->getAdapter()->execute($sql, $params);
     }
 
     /**
      * @inheritDoc
      */
-    public function query($sql)
+    public function query(string $sql, array $params = [])
     {
-        return $this->getAdapter()->query($sql);
+        return $this->getAdapter()->query($sql, $params);
     }
 
     /**
      * @inheritDoc
      */
-    public function getQueryBuilder()
+    public function getQueryBuilder(): Query
     {
         return $this->getAdapter()->getQueryBuilder();
     }
@@ -228,7 +218,7 @@ abstract class AbstractMigration implements MigrationInterface
     /**
      * @inheritDoc
      */
-    public function fetchRow($sql)
+    public function fetchRow(string $sql)
     {
         return $this->getAdapter()->fetchRow($sql);
     }
@@ -236,7 +226,7 @@ abstract class AbstractMigration implements MigrationInterface
     /**
      * @inheritDoc
      */
-    public function fetchAll($sql)
+    public function fetchAll(string $sql): array
     {
         return $this->getAdapter()->fetchAll($sql);
     }
@@ -244,20 +234,7 @@ abstract class AbstractMigration implements MigrationInterface
     /**
      * @inheritDoc
      */
-    public function insert($table, $data)
-    {
-        trigger_error('insert() is deprecated since 0.10.0. Use $this->table($tableName)->insert($data)->save() instead.', E_USER_DEPRECATED);
-        // convert to table object
-        if (is_string($table)) {
-            $table = new Table($table, [], $this->getAdapter());
-        }
-        $table->insert($data)->save();
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function createDatabase($name, $options)
+    public function createDatabase(string $name, array $options): void
     {
         $this->getAdapter()->createDatabase($name, $options);
     }
@@ -265,7 +242,7 @@ abstract class AbstractMigration implements MigrationInterface
     /**
      * @inheritDoc
      */
-    public function dropDatabase($name)
+    public function dropDatabase(string $name): void
     {
         $this->getAdapter()->dropDatabase($name);
     }
@@ -273,7 +250,23 @@ abstract class AbstractMigration implements MigrationInterface
     /**
      * @inheritDoc
      */
-    public function hasTable($tableName)
+    public function createSchema(string $name): void
+    {
+        $this->getAdapter()->createSchema($name);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function dropSchema(string $name): void
+    {
+        $this->getAdapter()->dropSchema($name);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function hasTable(string $tableName): bool
     {
         return $this->getAdapter()->hasTable($tableName);
     }
@@ -281,27 +274,12 @@ abstract class AbstractMigration implements MigrationInterface
     /**
      * @inheritDoc
      */
-    public function table($tableName, $options = [])
+    public function table(string $tableName, array $options = []): Table
     {
         $table = new Table($tableName, $options, $this->getAdapter());
         $this->tables[] = $table;
 
         return $table;
-    }
-
-    /**
-     * A short-hand method to drop the given database table.
-     *
-     * @deprecated since 0.10.0. Use $this->table($tableName)->drop()->save() instead.
-     *
-     * @param string $tableName Table Name
-     *
-     * @return void
-     */
-    public function dropTable($tableName)
-    {
-        trigger_error('dropTable() is deprecated since 0.10.0. Use $this->table($tableName)->drop()->save() instead.', E_USER_DEPRECATED);
-        $this->table($tableName)->drop()->save();
     }
 
     /**
@@ -311,18 +289,17 @@ abstract class AbstractMigration implements MigrationInterface
      * Right now, the only check is if there is both a `change()` and
      * an `up()` or a `down()` method.
      *
-     * @param string|null $direction
-     *
      * @return void
      */
-    public function preFlightCheck($direction = null)
+    public function preFlightCheck(): void
     {
         if (method_exists($this, MigrationInterface::CHANGE)) {
-            if (method_exists($this, MigrationInterface::UP) ||
+            if (
+                method_exists($this, MigrationInterface::UP) ||
                 method_exists($this, MigrationInterface::DOWN)
             ) {
                 $this->output->writeln(sprintf(
-                    '<comment>warning</comment> Migration contains both change() and/or up()/down() methods.  <options=bold>Ignoring up() and down()</>.'
+                    '<comment>warning</comment> Migration contains both change() and up()/down() methods.  <options=bold>Ignoring up() and down()</>.'
                 ));
             }
         }
@@ -333,18 +310,29 @@ abstract class AbstractMigration implements MigrationInterface
      *
      * Right now, the only check is whether all changes were committed
      *
-     * @param string|null $direction direction of migration
-     *
      * @throws \RuntimeException
-     *
      * @return void
      */
-    public function postFlightCheck($direction = null)
+    public function postFlightCheck(): void
     {
         foreach ($this->tables as $table) {
             if ($table->hasPendingActions()) {
                 throw new RuntimeException('Migration has pending actions after execution!');
             }
         }
+    }
+
+    /**
+     * Checks to see if the migration should be executed.
+     *
+     * Returns true by default.
+     *
+     * You can use this to prevent a migration from executing.
+     *
+     * @return bool
+     */
+    public function shouldExecute(): bool
+    {
+        return true;
     }
 }
